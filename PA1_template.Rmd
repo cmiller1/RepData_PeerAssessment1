@@ -1,25 +1,91 @@
 ---
-title: "Reproducible Research: Peer Assessment 1"
-output: 
-  html_document:
-    keep_md: true
+title: "RepData_PeerAssessment1"
+author: "cmiller1"
+date: "February 15, 2015"
+output: html_document
 ---
 
+##Loading and preprocessing the data
+First, we'll read in the data into a R DF. To be thorough, the zip file is downloaded from the internet and the uncompressed into an R DF. But before all that, we'll load the necessary librarys:
+```{r}
+library(dplyr)
+library(ggplot2)
+if(!file.exists("temp.zip")) download.file("https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2Factivity.zip","temp.zip", method="curl", mode="wb")
+data0<-read.csv(unzip("temp.zip"))
+```
 
-## Loading and preprocessing the data
+##What is mean total number of steps taken per day?
+1. First we'll group the data by date using ddplyr and then summarize the data using the sum of steps:
+```{r}
+by_day<-group_by(data0,date)
+sum_steps<-summarise(by_day, sum(steps))
+```
 
+The total steps taken per day then is shown in the DF:
+```{r} 
+head(sum_steps)
+```
 
+2. Now we'll create the histogram using ggplot2's qplot function. For easier viewing, we'll define a bin width of 1000 and make the column names more readable:
+```{r}
+names(sum_steps)<-c("date","steps")
+qplot(steps, data=sum_steps, geom="histogram", binwidth=1000)
+```
 
-## What is mean total number of steps taken per day?
+3. To report on the mean and median values, we'll just print the summary of the grouped data. The median is 10765 and the mean is 10766.
+```{r}
+summary(sum_steps)
+```
 
+##What is the average daily activity pattern?
+1. First we'll re-group the data by interval and then summarize using the average number of steps taken. Then we'll make a time-series graph of this data:
+```{r}
+by_int<-group_by(data0,interval)
+avg_int<-summarise(by_int, mean(steps, na.rm=T))
+names(avg_int)<-c("interval","mean_all_days")
+ggplot(avg_int, aes(x=interval, y=mean_all_days)) + geom_line()
+```
+*Note: Intervals are kept in original format of dataset so x axis labels refere to interval names and not the actual minutes of the day.*
 
+2. Now we'll select the interval with the highest mean number of steps which is 206.1698 and occurs at interval 835. It is interesting to note that the highest mean number of steps during any single interval is 206, while the highest individual value is 806. This suggests a high variation in daily activity patterns. 
 
-## What is the average daily activity pattern?
+```{r}
+avg_int[which.max(avg_int$mean_all_days),]
+```
 
+##Imputing missing values
+1. To get the total number of rows with NA values for the steps, we can just refer to the summary and see that it is 2304 rows with NA values:
+```{r}
+summary(data0)
+```
 
+2. My strategy to replace these NAs will be to use the average value for the interval overall the entire two month period. This was previously computed and stored in the avg_int DF:
+```{r}
+head(avg_int)
+```
 
-## Imputing missing values
+3. The following code creates a new DF copy of the old DF and then loops through the DF looking for NA values and when it finds one, it replaces the value with the average for the same time interval over all days.
 
+```{r}
+data1<-data0
+for (n in 1: nrow(data1)){
+if(is.na(data1[n,1])){
+k<-avg_int[avg_int$interval==data1[n,3],2]
+data1[n,1]<-k
+}
+}
+```
 
+4. Now we'll look at the new histogram and mean/median data for this updated data set: 
+```{r}
+by_day1<-group_by(data1,date)
+sum_steps1<-summarise(by_day1, sum(steps))
+names(sum_steps1)<-c("date","steps")
+qplot(steps, data=sum_steps1, geom="histogram", binwidth=1000)
+summary(sum_steps1)
+```
 
-## Are there differences in activity patterns between weekdays and weekends?
+We can observe from this comparison that there is relatively little change. There were previously only 8 days with NA values so this procuedure has replaced those 8 values with the overall averages. Since my methodology uses mean values to replace NA values, the median value only changes by a single step from 10765 to 10766. The mean value stays exactly the same (as we would expect when using the mean replacement approach). The histogram makes the changes more visible, particularly on a more defined binwidth. 
+
+##Are there differences in activity patterns between weekdays and weekends?
+
