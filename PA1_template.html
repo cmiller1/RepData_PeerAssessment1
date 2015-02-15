@@ -198,16 +198,16 @@ data1$day&lt;-factor(data1$weekday, labels=c(&quot;weekend&quot;,&quot;weekday&q
 <p>Here is a sample of what this looks like:</p>
 <pre class="r"><code>data1[sample(nrow(data1),10),]</code></pre>
 <pre><code>##           steps       date interval      ndate weekday     day
-## 10493 149.00000 2012-11-06     1020 2012-11-06       1 weekday
-## 9431    6.00000 2012-11-02     1750 2012-11-02       1 weekday
-## 2117  171.15094 2012-10-08      820 2012-10-08       1 weekday
-## 8995    2.09434 2012-11-01      530 2012-11-01       1 weekday
-## 7692    0.00000 2012-10-27     1655 2012-10-27       0 weekend
-## 12201 526.00000 2012-11-12      840 2012-11-12       1 weekday
-## 9011   37.35849 2012-11-01      650 2012-11-01       1 weekday
-## 6528    0.00000 2012-10-23     1555 2012-10-23       1 weekday
-## 9541    0.00000 2012-11-03      300 2012-11-03       0 weekend
-## 16400   0.00000 2012-11-26     2235 2012-11-26       1 weekday</code></pre>
+## 5758    0.00000 2012-10-20     2345 2012-10-20       0 weekend
+## 13207   0.00000 2012-11-15     2030 2012-11-15       1 weekday
+## 16472   0.00000 2012-11-27      435 2012-11-27       1 weekday
+## 11750  77.83019 2012-11-10     1905 2012-11-10       0 weekend
+## 15448 742.00000 2012-11-23     1515 2012-11-23       1 weekday
+## 1618   64.00000 2012-10-06     1445 2012-10-06       0 weekend
+## 1126    0.00000 2012-10-04     2145 2012-10-04       1 weekday
+## 14107   0.00000 2012-11-18     2330 2012-11-18       0 weekend
+## 11966 465.00000 2012-11-11     1305 2012-11-11       0 weekend
+## 7844    0.00000 2012-10-28      535 2012-10-28       0 weekend</code></pre>
 <ol start="2" style="list-style-type: decimal">
 <li>Finally we’ll make a panel time series plot comparing the avg number of steps at each interval on the weekdays vs the weekends:</li>
 </ol>
