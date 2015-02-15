@@ -4,10 +4,18 @@ author: "cmiller1"
 date: "February 15, 2015"
 output: html_document
 ---
+This assignment makes use of data from a personal activity monitoring device. This device collects data at 5 minute intervals through out the day. The data consists of two months of data from an anonymous individual collected during the months of October and November, 2012 and include the number of steps taken in 5 minute intervals each day.
+
+The variables included in this dataset are:  
+* steps: Number of steps taking in a 5-minute interval (missing values are coded as NA)  
+* date: The date on which the measurement was taken in YYYY-MM-DD format  
+* interval: Identifier for the 5-minute interval in which measurement was taken
+
+The dataset is stored in a comma-separated-value (CSV) file and there are a total of 17,568 observations in this dataset.
 
 ##Loading and preprocessing the data
-First, we'll read in the data into a R DF. To be thorough, the zip file is downloaded from the internet and the uncompressed into an R DF. But before all that, we'll load the necessary librarys:
-```{r}
+First, we'll read in the data into a R DF. To be thorough, the zip file is downloaded from the internet and the uncompressed into an R DF. [The data are downloaded from here](https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2Factivity.zip)The necessary librarys are also loaded:
+```{r results='hide', message=FALSE}
 library(dplyr)
 library(ggplot2)
 if(!file.exists("temp.zip")) download.file("https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2Factivity.zip","temp.zip", method="curl", mode="wb")
@@ -45,6 +53,7 @@ avg_int<-summarise(by_int, mean(steps, na.rm=T))
 names(avg_int)<-c("interval","mean_all_days")
 ggplot(avg_int, aes(x=interval, y=mean_all_days)) + geom_line()
 ```
+
 *Note: Intervals are kept in original format of dataset so x axis labels refere to interval names and not the actual minutes of the day.*
 
 2. Now we'll select the interval with the highest mean number of steps which is 206.1698 and occurs at interval 835. It is interesting to note that the highest mean number of steps during any single interval is 206, while the highest individual value is 806. This suggests a high variation in daily activity patterns. 
@@ -59,7 +68,7 @@ avg_int[which.max(avg_int$mean_all_days),]
 summary(data0)
 ```
 
-2. My strategy to replace these NAs will be to use the average value for the interval overall the entire two month period. This was previously computed and stored in the avg_int DF:
+2. My strategy to replace these NAs will be to use the average value for the interval over the entire two month period. This was previously computed and stored in the avg_int DF:
 ```{r}
 head(avg_int)
 ```
@@ -85,7 +94,30 @@ qplot(steps, data=sum_steps1, geom="histogram", binwidth=1000)
 summary(sum_steps1)
 ```
 
-We can observe from this comparison that there is relatively little change. There were previously only 8 days with NA values so this procuedure has replaced those 8 values with the overall averages. Since my methodology uses mean values to replace NA values, the median value only changes by a single step from 10765 to 10766. The mean value stays exactly the same (as we would expect when using the mean replacement approach). The histogram makes the changes more visible, particularly on a more defined binwidth. 
+We can observe from this comparison that there is relatively little change. There were previously only 8 days with NA values so this procuedure has replaced those 8 values with the overall averages. Since my methodology uses mean values to replace NA values, the median value only changes by a single step from 10765 to 10766. The mean value stays exactly the same (as we would expect when using the mean replacement approach). The histogram makes the changes more visible, particularly on a narrower binwidth. 
 
 ##Are there differences in activity patterns between weekdays and weekends?
+1. We'll create a new factor variable in the dataset with NAs removed to specify if the day is a weekday or weekend. First we need to put the date into the proper date format then we use an if loop to code weekdays with 1 and weekends with 0. The final step is to map the new factor variable on this data:
+```{r}
+data1$ndate <- as.Date(data1$date, format="%Y-%m-%d")
+data1$weekday <- 1
+for (n in 1: nrow(data1)){
+if (weekdays(data1[n,4])=="Saturday" | weekdays(data1[n,4])=="Sunday"){
+data1[n,5]<-0}
+}
+data1$day<-factor(data1$weekday, labels=c("weekend","weekday"))
+```
+Here is a sample of what this looks like:
+```{r}
+data1[sample(nrow(data1),10),]
+```
 
+2. Finally we'll make a panel time series plot comparing the avg number of steps at each interval on the weekdays vs the weekends:
+```{r}
+by_weekday<-group_by(data1,interval, day)
+avg_weekday<-summarise(by_weekday, mean(steps))
+names(avg_weekday)<-c("interval","day","steps")
+ggplot(avg_weekday, aes(x=interval, y=steps))+ geom_line() + facet_grid(day ~ .) + geom_line(stat = "hline", yintercept = "mean")
+```
+
+Since we have also mapped the average for each panel, we can observe that the average number of steps is slightly higher on the weekends, although not by much. 
